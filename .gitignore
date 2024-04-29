@@ -1,6 +1,8 @@
 /data
 /venv
+/output
+*.pdf
 app.log
 config.json
 data.zip
-*.pdf
+autopy2exe.json

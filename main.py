@@ -60,6 +60,7 @@ def main(config: dict) -> None:
             page_width - reportlab_pil_img.getSize()[0]) / 2, y=current_image_y)
     c.save()
     logger.info(f'Вариант {filename} готов!')
+    os.system('pause')
 
 
 def data_loader(config: dict) -> dict:
@@ -113,8 +114,11 @@ if __name__ == '__main__':
         json.dump(default_config, open('config.json', 'w'))
         config = default_config
     else:
-        config: dict = json.load(open(ROOT_DIR + '/config.json', 'r'))
-        if config.keys() != default_config.keys():
+        try:
+            config: dict = json.load(open(ROOT_DIR + '/config.json', 'r'))
+            if config.keys() != default_config.keys():
+                raise
+        except:
             config = default_config
             json.dump(default_config, open('config.json', 'w'))
     initialization(config)
