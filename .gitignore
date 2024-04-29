@@ -2,3 +2,5 @@
 /venv
 app.log
 config.json
+data.zip
+*.pdf

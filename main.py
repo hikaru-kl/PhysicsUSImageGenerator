@@ -5,12 +5,13 @@ import random
 import json
 import math
 import os
-
+import zipfile
 import PIL.Image
-import urllib
+
 from urllib.request import urlretrieve
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+
 
 ROOT_DIR = os.path.abspath('.')
 
@@ -25,10 +26,6 @@ def main(config: dict) -> None:
     A4 = (1240, 1754)
     c = canvas.Canvas(filename, pagesize=A4)
     page_width, page_height = A4
-    # NOTE: Аккуратней с этим
-    for f in os.listdir():
-        if '.pdf' in f:
-            os.remove(f'./{f}')
 
     current_image_y = 0
     for i in range(1, len(tasks.keys())):
@@ -62,7 +59,7 @@ def main(config: dict) -> None:
         c.drawImage(reportlab_pil_img, x=(
             page_width - reportlab_pil_img.getSize()[0]) / 2, y=current_image_y)
     c.save()
-    logger.info(f'File {filename} is ready!')
+    logger.info(f'Вариант {filename} готов!')
 
 
 def data_loader(config: dict) -> dict:
@@ -80,28 +77,38 @@ def data_loader(config: dict) -> dict:
 
 def initialization(config: dict):
     if config['debug']:
-        logging.basicConfig(filename='app.log', level=logging.DEBUG)
+        logging.basicConfig(filename='app.log',
+                            level=logging.DEBUG, encoding='utf-8', format='[%(asctime)s]%(levelname)s:%(message)s')
     else:
-        logging.basicConfig(filename='app.log', level=logging.INFO)
+        logging.basicConfig(filename='app.log',
+                            level=logging.INFO, encoding='utf-8', format='[%(asctime)s]%(levelname)s:%(message)s')
     if 'data' not in os.listdir(path=ROOT_DIR):
         try:
-            r = urlretrieve('')
+            urlretrieve(url=config['data_url'], filename='data.zip')
+            with zipfile.ZipFile(ROOT_DIR + '/data.zip', 'r') as zip_ref:
+                zip_ref.extractall(ROOT_DIR)
         except Exception as exp:
             if config['debug']:
                 logger.error(f'Error while downloading data: {exp}')
             else:
                 logger.info(
                     'Произошла ошибка при попытке скачать готовые задания.')
-        os.mkdir(path=ROOT_DIR + '/data')
-        for i in range(1, config['tasks_amount'] + 1):
-            os.mkdir(path=ROOT_DIR + f'/data/{i}')
+            os.mkdir(path=ROOT_DIR + '/data')
+            for i in range(1, config['tasks_amount'] + 1):
+                os.mkdir(path=ROOT_DIR + f'/data/{i}')
+        else:
+            try:
+                os.remove(ROOT_DIR + '/data.zip')
+            except:
+                pass
+            logger.info('Готовые задания успешно скачаны')
     logger.info('Данные успешно загружены')
     return main(config)
 
 
 if __name__ == '__main__':
     default_config = {'tasks_amount': 26, 'debug': False,
-                      'y_margin_px': 120, 'data_url': ''}
+                      'y_margin_px': 120, 'data_url': 'https://github.com/hikaru-kl/PhysicsUSImageGenerator/raw/main/data.zip'}
     if 'config.json' not in os.listdir(path=ROOT_DIR):
         json.dump(default_config, open('config.json', 'w'))
         config = default_config
